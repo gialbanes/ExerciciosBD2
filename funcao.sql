@@ -107,7 +107,7 @@ create procedure RegistrarVenda(in id int, in qtd int)
 begin
 	declare valorTotal decimal(10,2);
     
-    set valorTotal = calcularVenda(id, qtd);
+    set valorTotal = calcularVenda(id, qtd); #não faço o calculo diretamente, já tenho uma função que faz isso
     insert into vendas(livroId, dtVenda, qtd, valorTotal) values
     (id, curdate(), qtd, valorTotal);
 end//
@@ -117,3 +117,29 @@ select * from vendas;
 
 #executar procedure
 call RegistrarVenda(3,2); #invocando a função
+
+delimiter //
+create procedure baixarEstoque(in id int, in qtd int)
+begin
+	declare estoqueAtualizado int;
+    
+    set estoqueAtualizado = calculaEstoque(id, qtd);
+    
+    update livros set estoque=estoqueAtualizado where livroId=id;
+end//
+delimiter ;
+
+select * from livros;
+call baixarEstoque(2,5);
+
+#criar trigger
+delimiter //
+create trigger vender after insert on vendas for each row
+begin
+	call baixarEstoque(new.livroId, new.qtd);
+end//
+delimiter ;
+
+select * from livros;
+select * from vendas;
+call RegistrarVenda(1,8);
