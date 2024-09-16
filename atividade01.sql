@@ -152,39 +152,18 @@ call addVenda(10, "Teste");
 #3. Crie um gatilho chamado `BeforeInsertIndicacao` que verifica se o funcionário indicado já foi indicado por outro funcionário. Se o funcionário já tiver uma indicação, o gatilho deve lançar um erro e impedir a inserção
 
 delimiter //
-create procedure verificacao(in id int)
+create trigger beforeInsertIndicacao
+before insert on indicacoes
+for each row
 begin
-declare codIndicado int;
-select count(*) into codIndicado from indicacoes where codIndicado = id;
-	if id = codIndicado then
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Valor deve ser maior que 0';
-	else 
-	insert into indicacoes(codIndicado) values
-	(id);
+	if exists(select 1 from indicacoes where codIndicado = new.codIndicado)
+    then
+		signal sqlstate '45000' set message_text = 'O funcionário indicado já foi indicado por outro funcionário';
 	end if;
-end //
-delimiter ;
-
-drop trigger beforeInsertIndicacao;
-
-delimiter //
-create trigger beforeInsertIndicacao before insert on indicacoes for each row 
-begin 
-	call verificacao(new.codIndicado);
-end //
-delimiter ;
+end
+// delimiter ;
+ 
+insert into indicacoes (codIndicador, codIndicado) values (3, 1);
 
 select * from indicacoes;
-
-
-INSERT INTO indicacoes (codIndicado) VALUES (1);
-
-
-
-
-
-
-select * from indicacoes;
-
-call beforeInsertIndicado(8,1);
 
