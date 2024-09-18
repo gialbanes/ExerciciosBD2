@@ -4,7 +4,8 @@ use emptech_giovana;
 
 create table if not exists funcionarios(
 codFunc int auto_increment primary key,
-nomeFunc varchar(255) not null
+nomeFunc varchar(255) not null,
+codAtuacao int
 );
 
 create table if not exists veiculos(
@@ -14,16 +15,19 @@ placas varchar(20) not null,
 codFunc int
 );
 
-insert into funcionarios(nomeFunc) values
-('João Silva'),
-('Maria Oliveira'),
-('Pedro Santos'),
-('Ana Costa'),
-('Lucas Almeida'),
-('Fernanda Lima'),
-('Giovana Albanês'),
-('Arthur Fudali'),
-('Amanda Costa');
+insert into funcionarios(nomeFunc, codAtuacao) values
+('João Silva', 9),
+('Maria Oliveira', 3),
+('Pedro Santos', 2),
+('Ana Costa', 1),
+('Lucas Almeida', 5),
+('Fernanda Lima', 4),
+('Giovana Albanês', 8),
+('Arthur Fudali', 6),
+('Amanda Costa', 10);
+
+select * from funcionarios;
+
 
 insert into veiculos(modelo, placas, codFunc) values
 ('Fiat Uno', 'ABC1D23', 1),
@@ -134,7 +138,7 @@ Delimiter ;
 
 select getFuncionarioVeiculoCount(1)  as 'Quantidade de veículos' ;
 
-#2. Crie um procedimento armazenado chamado `AddVenda` que insere uma nova atuação de vendas na tabela `AtuacaoVendas`. O procedimento deve receber uma descrição e adicionar a nova atuação de vendas.
+#1. Crie um procedimento armazenado chamado `AddVenda` que insere uma nova atuação de vendas na tabela `AtuacaoVendas`. O procedimento deve receber uma descrição e adicionar a nova atuação de vendas.
 delimiter //
 create procedure addVenda(in id int, in descricao varchar(255))
 begin
@@ -147,10 +151,7 @@ select * from atuacaoVendas;
 call addVenda(10, "Teste");
 
 
-
-
 #3. Crie um gatilho chamado `BeforeInsertIndicacao` que verifica se o funcionário indicado já foi indicado por outro funcionário. Se o funcionário já tiver uma indicação, o gatilho deve lançar um erro e impedir a inserção
-
 delimiter //
 create trigger beforeInsertIndicacao
 before insert on indicacoes
@@ -166,4 +167,13 @@ end
 insert into indicacoes (codIndicador, codIndicado) values (3, 1);
 
 select * from indicacoes;
+
+#4. 
+create view funcionarioVeiculoAtuacao as 
+select f.codFunc as "ID do funcionário", f.nomeFunc as "Nome do funcionário", v.modelo as "Modelo", v.placas as "Placa", a.descricao as "Descriação da atuação vendas" from veiculos v
+inner join funcionarios f on v.codFunc = f.codFunc
+inner join atuacaoVendas a on v.;
+
+#chamando a view
+select * from func_veic;
 
