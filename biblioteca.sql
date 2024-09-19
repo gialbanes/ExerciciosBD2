@@ -1,5 +1,5 @@
-create database bilioteca;
-use bilioteca;
+create database biblioteca;
+use biblioteca;
 
 create table livros(
 codLivro int auto_increment primary key,
