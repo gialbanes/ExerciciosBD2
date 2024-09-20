@@ -58,5 +58,30 @@ insert into transacoes(contaId, valor, dataTransacao, tipo_transacao) values
 (1, 200.00, "2024-09-18 11:00:00", "Saque"),
 (2, 300.00, "2024-09-18 12:00:00", "Depósito");
 
-create INDEX idx_transacoes_data on transacoes(dataTransacao);
+create index idx_transacoes_data on transacoes(dataTransacao);
 select * from transacoes order by dataTransacao desc;
+
+#listar indexes
+
+show index from clientes;
+show index from transacoes;
+
+#transaction 
+/*transições permitem que um conjunto de operações seja tratado como uma unica unidade de trabalho, 
+garantindo que todas sejam executadas com sucesso ou que nenhuma seja aplicada, no caso de falhas
+begin 
+commit 
+rollback
+
+exeplo 1: transferencia de saldo entre contas, onde ambas as atualizações precisam ocorrer ou nenhuma delas. 
+*/
+
+start transaction;
+update contas set saldo = saldo - 100 where id =1;
+update contas set saldo = saldo + 100 where id =2;
+select * from contas;
+commit;
+rollback;
+select * from contas;
+
+/* se houver qualquer um erro em qualquer dos updates, o sistema deve fazer um rollback para desfazer as alterações*/
