@@ -97,3 +97,37 @@ select * from autores;
 select * from livros;
 select * from membros;
 select * from emprestimos;
+select * from multas;
+
+update emprestimos set data_devolucao='2024-10-25', devolvido='true'
+where emprestimo_id=1;
+
+create or replace function baixar_estoque()
+returns trigger as $$
+declare diminuir_estoque int;
+begin
+	select estoque into diminuir_estoque from livros l where l.livro_id = new.livro_id;
+	
+	update livros set estoque = diminuir_estoque - 1
+	where livro_id  = new.livro_id;
+	return new;
+end;
+$$ language plpgsql;
+
+create or replace function aumentar_estoque()
+returns trigger as $$
+declare novo_estoque int;
+begin
+	select estoque into novo_estoque from livros l where l.livro_id = new.livro_id;
+	
+	update livros set estoque = novo_estoque + 1
+	where livro_id  = new.livro_id;
+	return new;
+end;
+$$ language plpgsql;
+
+create trigger trigger_baixar_estoque after insert on emprestimos for each row
+execute functon baixar_estoque();
+
+create trigger trigger_aumentar_estoque after 
+
