@@ -90,7 +90,6 @@ select * from vendas;
 
 /*1. Consultas SQL Utilizando Where, Order By, Group By, Having:
 a. Consulta 1: Listar todas as vendas de um tipo de palmito específico.*/
-
 select p.tipo_palmito as "Tipo palmito" , v.quantidade_vendida as "Total de vendas" from vendas v
 join palmitos p using(id_palmito)
 where tipo_palmito = 'Açaí Orgânico'
@@ -123,7 +122,7 @@ return ifnull(qtd, 0);
 end//
 delimiter ;
 
-select totalVendas(6) as "Total vendas";
+select totalVendas(1) as "Total vendas";
 
 
 #b. Inserir uma nova venda e atualizar o estoque.
@@ -141,7 +140,7 @@ end//
 delimiter ;
 
 delimiter //
-create procedure novaVenda(id_palmito int, qtd int)
+create procedure novaVenda(in id_palmito int, in qtd int)
 begin
 declare valorTotal int;
 set valorTotal = valorTotalVenda(id_palmito, qtd);
@@ -149,8 +148,8 @@ insert into vendas(id_palmito, quantidade_vendida, data_venda, preco_total) valu
 (id_palmito, qtd, curdate(), valorTotal);
 end//
 delimiter ;
-call novaVenda(6, 20);
-select * from vendas where id_palmito = 6;
+call novaVenda(1, 20);
+select * from vendas where id_palmito = 1;
 
 delimiter //
 create function atualizaEstoque(id int, qtd int) returns int
@@ -164,20 +163,77 @@ end//
 delimiter ;
 
 delimiter //
-create procedure baixarEstoque(id int, qtd int)
+create procedure baixarEstoque(in id int, in qtd int)
 begin
 declare estoqueAtualizado int;
 set estoqueAtualizado = atualizaEstoque(id, qtd);
 update palmitos set estoque_atual = estoqueAtualizado where id_palmito = id; 
 end//
 delimiter ;
-call baixarEstoque(6, 20);
-select * from palmitos where id_palmito = 6;
+call baixarEstoque(1, 20);
+select * from palmitos where id_palmito = 1;
 
 
+#c. Atualizar o estoque automaticamente ao inserir uma nova compra
+delimiter //
+create function valorTotalCompra(id int, qtd int) returns decimal(10,2)
+begin
+declare valorTotal decimal(10,2);
+declare precoUni decimal(10,2);
+select preco_venda into precoUni from palmitos where palmitos.id_palmito = id_palmito limit 1;
+if precoUni is null then return 0;
+end if;
+set valorTotal = precoUni * qtd;
+return valorTotal;
+end//
+delimiter ;
 
+delimiter //
+create procedure novaCompra(in id_palmito int, in qtd int)
+begin
+declare valorTotalCompra int;
+set valorTotalCompra = valorTotalCompra(id_palmito, qtd);
+insert into compras(id_palmito, quantidade_comprada, data_compra, preco_total) values
+(id_palmito, qtd, curdate(), valorTotalCompra);
+end//
+delimiter ;
 
+call novaCompra(1, 20);
+select * from compras where id_palmito = 1;
+select * from compras;
+select * from palmitos;
 
+delimiter //
+create function atualizaEstoqueCompras(id int, qtd int) returns int
+begin
+declare estoqueAtual int;
+declare estoqueAtualizado int;
+select estoque_atual into estoqueAtual from palmitos where palmitos.id_palmito = id;
+set estoqueAtualizado = estoqueAtual - qtd;
+return estoqueAtualizado;
+end//
+delimiter ;
 
+delimiter //
+create procedure baixarEstoqueCompras(in id int, in qtd int)
+begin
+declare estoqueAtualizado int;
+set estoqueAtualizado = atualizaEstoque(id, qtd);
+update palmitos set estoque_atual = estoqueAtualizado where id_palmito = id; 
+end//
+delimiter ;
+call baixarEstoqueCompras(1, 20);
+select * from palmitos where id_palmito = 1;
+select * from compras;
+select * from palmitos;
 
+delimiter //
+create trigger comprar after insert on compras for each row
+begin
+	call baixarEstoqueCompras(new.id_palmito, new.quantidade_comprada);
+end //
+delimiter ;
 
+select * from palmitos;
+select * from compras;
+call novaCompra(6, 30);
